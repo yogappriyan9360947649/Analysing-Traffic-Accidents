@@ -41,7 +41,6 @@ req(input$file)
 df <- read.csv(input$file$datapath, stringsAsFactors = FALSE) 
 # Parse time and extract hour 
 df$Time <- parse_time(df$Time, format = "%H:%M") 
-12 
 df$Hour <- hour(df$Time) 
 # Time of day categories 
 df$TimeOfDay <- case_when( 
@@ -80,7 +79,6 @@ ggplot(tod, aes(x = reorder(TimeOfDay, -Count), y = Count, fill =
 TimeOfDay)) + 
 geom_bar(stat = "identity") + 
 labs(title = "Traffic Accidents by Time of Day", 
-13 
 x = "Time of Day", 
 y = "Number of Accidents") + 
 theme_minimal() + 

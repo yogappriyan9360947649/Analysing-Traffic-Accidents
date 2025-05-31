@@ -1,0 +1,105 @@
+library(shiny) 
+library(tidyverse) 
+library(lubridate) 
+# UI 
+ui <- fluidPage( 
+titlePanel("_
+ . ¨
+ › 2
+ • < Traffic Accidents Analysis by Time of Day"), 
+sidebarLayout( 
+sidebarPanel( 
+fileInput("file", "Upload CSV File", 
+accept = c(".csv")), 
+helpText("The file should contain at least a 'Time' column in HH:MM 
+format."), 
+checkboxInput("has_date", "My data also contains a 'Date' column", 
+FALSE) 
+), 
+mainPanel( 
+tabsetPanel( 
+tabPanel("ç
+ # ¡
+ / Hourly Accidents", plotOutput("hourlyPlot")), 
+tabPanel("◆
+ ¿"
+ • _ Time of Day", plotOutput("todPlot")), 
+tabPanel("·
+ . . ·
+ .ˆ
+ ) 
+) 
+) 
+) 
+# Server 
+ç · ·
+ ç Daily Trend", plotOutput("dailyPlot")) 
+server <- function(input, output) { 
+# Reactive data after processing 
+accident_data <- reactive({ 
+req(input$file) 
+df <- read.csv(input$file$datapath, stringsAsFactors = FALSE) 
+# Parse time and extract hour 
+df$Time <- parse_time(df$Time, format = "%H:%M") 
+12 
+df$Hour <- hour(df$Time) 
+# Time of day categories 
+df$TimeOfDay <- case_when( 
+df$Hour >= 0 & df$Hour < 6 ~ "Late Night (12am-6am)", 
+df$Hour >= 6 & df$Hour < 12 ~ "Morning (6am-12pm)", 
+df$Hour >= 12 & df$Hour < 18 ~ "Afternoon (12pm-6pm)", 
+df$Hour >= 18 & df$Hour <= 23 ~ "Evening (6pm-12am)" 
+) 
+# Parse date if checkbox is selected 
+if (input$has_date && "Date" %in% names(df)) { 
+df$Date <- as.Date(df$Date) 
+} 
+return(df) 
+}) 
+# Plot: Hourly Accidents 
+output$hourlyPlot <- renderPlot({ 
+df <- accident_data() 
+hourly <- df %>% 
+group_by(Hour) %>% 
+summarise(Count = n()) 
+ggplot(hourly, aes(x = Hour, y = Count)) + 
+geom_line(color = "blue", size = 1.2) + 
+geom_point(color = "red", size = 2) + 
+labs(title = "Traffic Accidents by Hour of Day", 
+x = "Hour (0–23)", 
+y = "Number of Accidents") + 
+theme_minimal() 
+}) 
+# Plot: Time of Day 
+output$todPlot <- renderPlot({ 
+df <- accident_data() 
+tod <- df %>% 
+group_by(TimeOfDay) %>% 
+summarise(Count = n()) 
+ggplot(tod, aes(x = reorder(TimeOfDay, -Count), y = Count, fill = 
+TimeOfDay)) + 
+geom_bar(stat = "identity") + 
+labs(title = "Traffic Accidents by Time of Day", 
+13 
+x = "Time of Day", 
+y = "Number of Accidents") + 
+theme_minimal() + 
+theme(legend.position = "none") 
+}) 
+# Plot: Daily Trend (if Date exists) 
+output$dailyPlot <- renderPlot({ 
+df <- accident_data() 
+if (!("Date" %in% names(df))) return(NULL) 
+daily <- df %>% 
+group_by(Date) %>% 
+summarise(Count = n()) 
+ggplot(daily, aes(x = Date, y = Count)) + 
+geom_line(color = "darkgreen") + 
+labs(title = "Daily Trend of Traffic Accidents", 
+x = "Date", 
+y = "Number of Accidents") + 
+theme_minimal() 
+}) 
+} 
+# Run the application 
+shinyApp(ui = ui, server = server)
